@@ -32,18 +32,26 @@ sem_t refund_choice;
 typedef struct {
 	char *movie;
 	int hour;
-	int minute
-}ticket;
+	int minute;
+} ticket;
 
-int tickets_avail = MAX_TICKETS;
+//int tickets_avail = MAX_TICKETS;
+int tickets_avail = 0;
 int done = 0;
+int myTicketNum = 0;
 void * refund();
 void * buy();
 void get_tickets(ticket* ticket_list);
 
-int main(){
+int main(int argc, char *argv[]){
+	if (argc == 1) {
+		myTicketNum = MAX_TICKETS;
+	}
+	else myTicketNum = atoi(argv[1]);
+	tickets_avail = myTicketNum;
 
-	sem_init(&available,0,MAX_TICKETS);
+	printf("\nTheater Box Office is now open!\t\t\t Tickets available: %d\n\n\n", myTicketNum);
+	sem_init(&available,0,myTicketNum);
 	sem_init(&sold, 0,0);
 	sem_init(&mutex, 0,1);
 	sem_init(&buy_choice, 0,0);
@@ -107,35 +115,38 @@ sleep(1);
 pthread_join(refunder, NULL);
 pthread_join(buyer, NULL);
 
+printf("\nTickets Sold Out!\n\n");
+
 // delete semaphores
 sem_destroy(&available);
 sem_destroy(&sold);
 sem_destroy(&mutex);
 sem_destroy(&buy_choice);
 sem_destroy(&refund_choice);
-printf("\nTickets Sold out!");
+
 
 return 0;
 }
 
 // producer
 void *refund(){
-
 	//while(!done)
 	while(tickets_avail)
 	{
-		//nanosleep(1,NULL);
+		nanosleep((const struct timespec *)1, NULL);
 		//sem_wait(&refund_choice); if we want user input
 		// sem_wait(&sold);
 		// sem_wait(&mutex);
-		int ticketsReturn = rand()%3 +1;
+		int ticketsReturn = rand()%(4 + 1);
 
 		sem_wait(&sold);
 		sem_wait(&mutex);
 		if(tickets_avail != 0)
 		{
 			tickets_avail += ticketsReturn;
-			printf("%d tickets returned \t\t\tTotal tickets available = %d\n", ticketsReturn, tickets_avail);
+			if (ticketsReturn > 0) {
+				printf("%d tickets returned \t\t\t Total tickets available = %d\n", ticketsReturn, tickets_avail);
+			}
 		}
 		sem_post(&mutex);
 		sem_post(&available);
@@ -154,21 +165,23 @@ void *buy() {
 		// sem_wait(&available);
 		// sem_wait(&mutex);
 
-		int ticketsSold = rand()%8 +1;
+		int ticketsSold = rand()%(8 +1);
 
 		//sem_wait(&buy_choice); if we want user input
 
 		//If not enough tickets available to sell, skip transaction.
 		if(tickets_avail < ticketsSold)
 		{
-			printf("Not enough tickets available for sale\n");
+			printf("Sorry, there are only %d tickets left for sale. We cannot sell you %d tickets.\n", tickets_avail, ticketsSold);
 			continue;
 		}
 
 		sem_wait(&available);
 		sem_wait(&mutex);
 		tickets_avail-= ticketsSold;
-		printf(" %d tickets sold\t\t\t Total tickets available = %d\n",ticketsSold, tickets_avail);
+		if (ticketsSold > 0) {
+			printf("%d tickets sold\t\t\t\t Total tickets available = %d\n",ticketsSold, tickets_avail);
+		}
 		sem_post(&mutex);
 		sem_post(&sold);
 
