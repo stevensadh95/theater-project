@@ -26,8 +26,6 @@
 sem_t available;
 sem_t sold;
 sem_t mutex;
-sem_t buy_choice;
-sem_t refund_choice;
 
 // Struct to represent tickets
 typedef struct {
@@ -58,11 +56,9 @@ int main(int argc, char *argv[]) {
 	printf("\nTheater Box Office is now open!\t\t\t Tickets available: %d\n\n\n", myTicketNum);
 	
 	// Initialize semaphores
-	sem_init(&available,0,myTicketNum);
-	sem_init(&sold, 0,0);
-	sem_init(&mutex, 0,1);
-	sem_init(&buy_choice, 0,0);
-	sem_init(&refund_choice,0,0);
+	sem_init(&available, 0, myTicketNum);
+	sem_init(&sold, 0, 0);
+	sem_init(&mutex, 0, 1);
 
 	pthread_t refunder;
 	pthread_t buyer;
@@ -74,10 +70,10 @@ int main(int argc, char *argv[]) {
 	pthread_attr_setscope(&attr[0], PTHREAD_SCOPE_SYSTEM);
 
 	// Handle pthread initialization errors
-	if(pthread_create(&refunder, NULL, refund, attr)){
+	if(pthread_create(&refunder, NULL, refund, attr)) {
 		printf("Error creating thread\n");
 	}
-	if (pthread_create(&buyer, NULL, buy, attr)){
+	if (pthread_create(&buyer, NULL, buy, attr)) {
 		printf("Error creating thread\n");
 	}
 
@@ -101,13 +97,13 @@ int main(int argc, char *argv[]) {
 //
 //	Refund: Buys tickets back and increases the total number of tickets
 //	available.
-//					Random ticket return range: 1 - 9.
+//					Random ticket return range: 1 - 5.
 //
 //*****************************************************************************
 void *refund() {
 	while(tickets_avail) {	// While there are still tickets available
 		nanosleep((const struct timespec *)1, NULL);	// Sleep briefly
-		int ticketsReturn = (rand()%4) + 1;		// Random number of tickets
+		int ticketsReturn = (rand() % 4) + 1;		// Random number of tickets
 
 		// Synchronize with semaphores
 		sem_wait(&sold);
@@ -128,15 +124,15 @@ void *refund() {
 
 //*****************************************************************************
 //
-//	Refund: Sells tickets and decreases the total number of tickets available.
-//					Random ticket sale range: 1 - 5.
+//	Buy: Sells tickets and decreases the total number of tickets available.
+//					Random ticket sale range: 1 - 9.
 //
 //*****************************************************************************
 void *buy() {
 
 	while(tickets_avail > 0) {		// While there are still tickets available
 		nanosleep((const struct timespec *)1, NULL);	// Sleep briefly
-		int ticketsSold = (rand()%8) + 1;		// Random number of tickets
+		int ticketsSold = (rand() % 8) + 1;		// Random number of tickets
 
 		// If there are not enough tickets available to sell, skip transaction.
 		if(tickets_avail < ticketsSold)
