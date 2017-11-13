@@ -1,7 +1,7 @@
 /******************************************************************************
  * Final Project: Theater Ticket Sales
  * Operating Systems - COP 4600-001
- * 
+ *
  * Authors: Michael Fuentes, Paul Hafer, and Steven Sadhwani
  * Date: 11-13-2017
  *****************************************************************************/
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 	tickets_avail = myTicketNum;
 
 	printf("\nTheater Box Office is now open!\t\t\t Tickets available: %d\n\n\n", myTicketNum);
-	
+
 	// Initialize semaphores
 	sem_init(&available, 0, myTicketNum);
 	sem_init(&sold, 0, 0);
@@ -87,8 +87,6 @@ int main(int argc, char *argv[]) {
 	sem_destroy(&available);
 	sem_destroy(&sold);
 	sem_destroy(&mutex);
-	sem_destroy(&buy_choice);
-	sem_destroy(&refund_choice);
 
 	return 0;	// End of program
 }
@@ -97,7 +95,7 @@ int main(int argc, char *argv[]) {
 //
 //	Refund: Buys tickets back and increases the total number of tickets
 //	available.
-//					Random ticket return range: 1 - 5.
+//					Random ticket return range: 1 - 4.
 //
 //*****************************************************************************
 void *refund() {
@@ -125,7 +123,7 @@ void *refund() {
 //*****************************************************************************
 //
 //	Buy: Sells tickets and decreases the total number of tickets available.
-//					Random ticket sale range: 1 - 9.
+//					Random ticket sale range: 1 - 8.
 //
 //*****************************************************************************
 void *buy() {
@@ -150,6 +148,6 @@ void *buy() {
 		// Release the semaphores
 		sem_post(&mutex);
 		sem_post(&sold);
-	}	
+	}
 	pthread_exit(NULL);	// Exit the thread
 }
