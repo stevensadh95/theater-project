@@ -1,9 +1,10 @@
-/*
-*
-* Term project: theater
-*
-*
-*/
+/******************************************************************************
+ * Final Project: Theater Ticket Sales
+ * Operating Systems - COP 4600-001
+ * 
+ * Authors: Michael Fuentes, Paul Hafer, and Steven Sadhwani
+ * Date: 11-13-2017
+ *****************************************************************************/
 
 #define _REENTRANT
 #include <pthread.h>
@@ -19,38 +20,51 @@
 #include <string.h>
 #include <time.h>
 
-
 #define MAX_TICKETS 5000
 
+// Declare semaphores
 sem_t available;
 sem_t sold;
 sem_t mutex;
 sem_t buy_choice;
 sem_t refund_choice;
 
-//struct to represent tickets
+// Struct to represent tickets
 typedef struct {
 	char *movie;
-	int hour;
-	int minute;
+	/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
+	//int hour;
+	//int minute;
+	/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
 } ticket;
 
-//int tickets_avail = MAX_TICKETS;
+// Declare global variables
 int tickets_avail = 0;
-int done = 0;
+/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
+//int done = 0;
+/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
 int myTicketNum = 0;
+
+// Declare producer / consumer functions
 void * refund();
 void * buy();
-void get_tickets(ticket* ticket_list);
 
-int main(int argc, char *argv[]){
+//*****************************************************************************
+//
+//	Main: Runs the program.
+//
+//*****************************************************************************
+int main(int argc, char *argv[]) {
+	// Allows user input to specify amount of tickets available.
 	if (argc == 1) {
-		myTicketNum = MAX_TICKETS;
+		myTicketNum = MAX_TICKETS; // Without command line arguments, set to MAX
 	}
-	else myTicketNum = atoi(argv[1]);
+	else myTicketNum = atoi(argv[1]);	// With command line arguments
 	tickets_avail = myTicketNum;
 
 	printf("\nTheater Box Office is now open!\t\t\t Tickets available: %d\n\n\n", myTicketNum);
+	
+	// Initialize semaphores
 	sem_init(&available,0,myTicketNum);
 	sem_init(&sold, 0,0);
 	sem_init(&mutex, 0,1);
@@ -66,7 +80,7 @@ int main(int argc, char *argv[]){
 	pthread_attr_init(&attr[0]);
 	pthread_attr_setscope(&attr[0], PTHREAD_SCOPE_SYSTEM);
 
-
+	// Handle pthread initialization errors
 	if(pthread_create(&refunder, NULL, refund, attr)){
 		printf("Error creating thread\n");
 	}
@@ -74,71 +88,35 @@ int main(int argc, char *argv[]){
 		printf("Error creating thread\n");
 	}
 
+	// Wait for both threads to finish
+	pthread_join(refunder, NULL);
+	pthread_join(buyer, NULL);
 
+	printf("\nTickets Sold Out!\n\n");
 
-	// something like this if we want user input.
+	// Delete all semaphores
+	sem_destroy(&available);
+	sem_destroy(&sold);
+	sem_destroy(&mutex);
+	sem_destroy(&buy_choice);
+	sem_destroy(&refund_choice);
 
-	/*
-	int choice = 0;
-
-	while(1) {
-	do{
-	printf("Welcome to AMC Theaters online ticketing\n\n");
-	printf("Please choose an option\n");
-	printf("1. Buy a ticket\n");
-	printf("2. Refund a ticket\n");
-	printf("3. Quit\n\n\n");
-
-	scanf("%d",&choice);
-}while(choice>3 || choice <1);
-
-
-switch(choice){
-
-case 1:
-sem_post(&buy_choice);
-break;
-
-case 2:
-sem_post(&refund_choice);
-break;
-
-case 3:
-exit(0);
-}
-sleep(1);
+	return 0;	// End of program
 }
 
+//*****************************************************************************
+//
+//	Refund: Buys tickets back and increases the total number of tickets
+//	available.
+//					Random ticket return range: 1 - 9.
+//
+//*****************************************************************************
+void *refund() {
+	while(tickets_avail) {	// While there are still tickets available
+		nanosleep((const struct timespec *)1, NULL);	// Sleep briefly
+		int ticketsReturn = (rand()%4) + 1;		// Random number of tickets
 
-*/
-//Wait for the threads to finish
-pthread_join(refunder, NULL);
-pthread_join(buyer, NULL);
-
-printf("\nTickets Sold Out!\n\n");
-
-// delete semaphores
-sem_destroy(&available);
-sem_destroy(&sold);
-sem_destroy(&mutex);
-sem_destroy(&buy_choice);
-sem_destroy(&refund_choice);
-
-
-return 0;
-}
-
-// producer
-void *refund(){
-	//while(!done)
-	while(tickets_avail)
-	{
-		nanosleep((const struct timespec *)1, NULL);
-		//sem_wait(&refund_choice); if we want user input
-		// sem_wait(&sold);
-		// sem_wait(&mutex);
-		int ticketsReturn = rand()%(4 + 1);
-
+		// Synchronize with semaphores
 		sem_wait(&sold);
 		sem_wait(&mutex);
 		if(tickets_avail != 0)
@@ -148,52 +126,45 @@ void *refund(){
 				printf("%d tickets returned \t\t\t Total tickets available = %d\n", ticketsReturn, tickets_avail);
 			}
 		}
+		// Release the semaphores
 		sem_post(&mutex);
 		sem_post(&available);
-
 	}
-
-	pthread_exit(NULL);
-
+	pthread_exit(NULL);	// Exit the thread
 }
 
+//*****************************************************************************
+//
+//	Refund: Sells tickets and decreases the total number of tickets available.
+//					Random ticket sale range: 1 - 5.
+//
+//*****************************************************************************
 void *buy() {
 
-	while(tickets_avail > 0){
+	while(tickets_avail > 0) {		// While there are still tickets available
+		nanosleep((const struct timespec *)1, NULL);	// Sleep briefly
+		int ticketsSold = (rand()%8) + 1;		// Random number of tickets
 
-		// //sem_wait(&buy_choice); if we want user input
-		// sem_wait(&available);
-		// sem_wait(&mutex);
-
-		int ticketsSold = rand()%(8 +1);
-
-		//sem_wait(&buy_choice); if we want user input
-
-		//If not enough tickets available to sell, skip transaction.
+		// If there are not enough tickets available to sell, skip transaction.
 		if(tickets_avail < ticketsSold)
 		{
 			printf("Sorry, there are only %d tickets left for sale. We cannot sell you %d tickets.\n", tickets_avail, ticketsSold);
 			continue;
 		}
-
+		// Synchronize with semaphores
 		sem_wait(&available);
 		sem_wait(&mutex);
-		tickets_avail-= ticketsSold;
+		tickets_avail-= ticketsSold;	// Decrement the tickets available
 		if (ticketsSold > 0) {
 			printf("%d tickets sold\t\t\t\t Total tickets available = %d\n",ticketsSold, tickets_avail);
 		}
+		// Release the semaphores
 		sem_post(&mutex);
 		sem_post(&sold);
-
-
 	}
-	done = 1;
-	pthread_exit(NULL);
-
-}
-
-//if we want to read transactions from a file?
-void get_tickets(ticket* ticket_list){
-
-
+	/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
+	//done = 1;
+	/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
+	
+	pthread_exit(NULL);	// Exit the thread
 }
