@@ -32,17 +32,10 @@ sem_t refund_choice;
 // Struct to represent tickets
 typedef struct {
 	char *movie;
-	/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
-	//int hour;
-	//int minute;
-	/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
 } ticket;
 
 // Declare global variables
 int tickets_avail = 0;
-/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
-//int done = 0;
-/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
 int myTicketNum = 0;
 
 // Declare producer / consumer functions
@@ -161,10 +154,6 @@ void *buy() {
 		// Release the semaphores
 		sem_post(&mutex);
 		sem_post(&sold);
-	}
-	/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
-	//done = 1;
-	/******Delete me???***************((((((((((^^^^^^^^^^^^^^^%$$$$$$$$$$$$$$*****/
-	
+	}	
 	pthread_exit(NULL);	// Exit the thread
 }
